@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { v2 as cloudinary } from "cloudinary"
 import { getAuth } from "@clerk/nextjs/server"
-import { PrismaClient } from "@prisma/client"
+import { prisma, withRetry } from "@/lib/prisma"
 
 // Configure Cloudinary
 cloudinary.config({
@@ -26,13 +26,7 @@ const createErrorResponse = (message: string, status: number, details?: string) 
 }
 
 export async function POST(request: NextRequest) {
-  let prisma: PrismaClient | null = null
-  
   try {
-    // Initialize Prisma client
-    prisma = new PrismaClient()
-    await prisma.$connect()
-    
     // Check authentication using getAuth (doesn't consume body)
     const { userId } = getAuth(request)
     console.log("🔍 Auth check - userId:", userId)
@@ -229,17 +223,21 @@ export async function POST(request: NextRequest) {
     const duration = typeof result.duration === "number" ? result.duration : 0
     
     try {
-      const video = await prisma.video.create({
-        data: {
-          title,
-          description: description || null,
-          publicId: result.public_id,
-          originalSize,
-          compressedSize: result.bytes,
-          duration,
-          userId,
-        },
-      })
+      const video = await withRetry(
+        () =>
+          prisma.video.create({
+            data: {
+              title,
+              description: description || null,
+              publicId: result.public_id,
+              originalSize,
+              compressedSize: result.bytes,
+              duration,
+              userId,
+            },
+          }),
+        { label: "videos.create", retries: 3, delayMs: 2000 }
+      )
       
       console.log("✅ Video saved to database:", video.id)
       return NextResponse.json({
@@ -266,9 +264,5 @@ export async function POST(request: NextRequest) {
       500, 
       error instanceof Error ? error.message : String(error)
     )
-  } finally {
-    if (prisma) {
-      await prisma.$disconnect()
-    }
   }
 }
