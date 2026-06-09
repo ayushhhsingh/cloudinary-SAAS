@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
         { label: "videos.create", retries: 3, delayMs: 2000 }
       )
       
-      console.log("✅ Video saved to database:", video.id)
+      console.log("✅ Video saved to database:", (video as { id: string }).id)
       return NextResponse.json({
         success: true,
         video,
