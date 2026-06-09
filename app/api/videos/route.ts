@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuth } from "@clerk/nextjs/server"
 import { prisma, withRetry } from "@/lib/prisma"
 
+export const dynamic = 'force-dynamic';
+
 const createErrorResponse = (message: string, status: number) => {
     return NextResponse.json({message}, {status})
 }

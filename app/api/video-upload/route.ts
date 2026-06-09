@@ -3,6 +3,8 @@ import { v2 as cloudinary } from "cloudinary"
 import { getAuth } from "@clerk/nextjs/server"
 import { prisma, withRetry } from "@/lib/prisma"
 
+export const dynamic = 'force-dynamic';
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
