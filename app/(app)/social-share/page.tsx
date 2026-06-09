@@ -9,6 +9,10 @@ const socialFormats = {
   "Twitter Post (16:9)": { width: 1200, height: 675, aspectRatio: "16:9" },
   "Twitter Header (3:1)": { width: 1500, height: 500, aspectRatio: "3:1" },
   "Facebook Cover (205:78)": { width: 820, height: 312, aspectRatio: "205:78" },
+  // LinkedIn personal banner: 4:1 aspect ratio. Cloudinary's CldImage with
+  // crop="fill" + aspectRatio="4:1" auto-crops the uploaded image to fit
+  // the banner dimensions while preserving the focal point.
+  "LinkedIn Banner (4:1)": { width: 1584, height: 396, aspectRatio: "4:1" },
 }
 
 type SocialFormat = keyof typeof socialFormats
@@ -76,14 +80,19 @@ export default function SocialShare() {
       })
       
       if (!response.ok) {
-        const errorMsg = data.details 
-          ? `${data.message || "Upload failed"} - ${data.details}`
-          : (typeof data.message === "string"
-            ? data.message
-            : typeof data.error === "string"
-              ? data.error
-              : "Failed to upload image")
-        
+        // Build a readable error message without assuming data.details is a string.
+        // The server's error response has the shape:
+        //   { message: string, details?: string, timestamp?: string }
+        // but axios error responses can come back as anything, so we coerce safely.
+        const message =
+          (typeof data?.message === "string" && data.message) ||
+          (typeof data?.error?.message === "string" && data.error.message) ||
+          (typeof data?.error === "string" && data.error) ||
+          (typeof data === "string" && data) ||
+          `Upload failed with status ${response.status}`
+        const detail =
+          typeof data?.details === "string" ? data.details : undefined
+        const errorMsg = detail ? `${message} - ${detail}` : message
         console.error("❌ Upload failed:", errorMsg)
         throw new Error(errorMsg)
       }

@@ -17,10 +17,40 @@ interface CloudinaryUploadResult {
   [key: string]: unknown
 }
 
-const createErrorResponse = (message: string, status: number, details?: string) => {
+// Coerce any value (string, Error, object) into a readable string.
+// Cloudinary's SDK error objects have a `.message` field; everything else
+// gets a sane JSON-stringify fallback so the client doesn't see "[object Object]".
+const toErrorDetails = (value: unknown): string => {
+  if (value === null || value === undefined) return "Unknown error"
+  if (typeof value === "string") return value
+  if (value instanceof Error) {
+    const base = value.message || value.name || "Error"
+    const cause =
+      (value as { cause?: unknown }).cause !== undefined
+        ? ` (cause: ${toErrorDetails((value as { cause?: unknown }).cause)})`
+        : ""
+    return `${base}${cause}`
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>
+    if (typeof obj.message === "string") {
+      return typeof obj.http_code === "number"
+        ? `${obj.message} (http ${obj.http_code})`
+        : (obj.message as string)
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return "Unserialisable error"
+    }
+  }
+  return String(value)
+}
+
+const createErrorResponse = (message: string, status: number, details?: unknown) => {
   return NextResponse.json({ 
     message, 
-    details,
+    details: details !== undefined ? toErrorDetails(details) : undefined,
     timestamp: new Date().toISOString()
   }, { status })
 }
@@ -141,18 +171,21 @@ export async function POST(request: NextRequest) {
         folder: "video-uploads",
         quality: "auto",
         fetch_format: "mp4",
-        chunk_size: 6000000,
+        // 2 minute timeout — handles slow connections without hanging forever.
+        // The Cloudinary SDK passes this through to the underlying request.
+        timeout: 120000,
       })
       console.log("✅ Upload with compression successful!")
     } catch (compressError: any) {
       console.log("⚠️ Compression upload failed, trying without compression...")
-      console.log("   Error:", compressError.message)
+      console.log("   Error:", toErrorDetails(compressError))
       
       // Fallback: Upload without compression
       try {
         result = await uploadToCloudinary(buffer, {
           resource_type: "video",
           folder: "video-uploads",
+          timeout: 120000,
         })
         console.log("✅ Upload without compression successful!")
       } catch (fallbackError: any) {
