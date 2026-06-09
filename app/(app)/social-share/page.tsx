@@ -21,8 +21,41 @@ interface ImageUploadResponse {
   publicId?: string
   public_id?: string
   message?: string
-  error?: string
+  error?: string | { message?: string }
   details?: string
+}
+
+function extractErrorMessage(
+  data: unknown,
+  status: number
+): string {
+  // Handle if data.message is a string
+  if (typeof (data as { message?: unknown })?.message === "string") {
+    return (data as { message: string }).message
+  }
+
+  // Handle if data.error is an object with a message property
+  const error = (data as { error?: unknown })?.error
+  if (
+    error &&
+    typeof error === "object" &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message
+  }
+
+  // Handle if data.error is a string
+  if (typeof error === "string") {
+    return error
+  }
+
+  // Handle if data itself is a string
+  if (typeof data === "string") {
+    return data
+  }
+
+  // Fallback
+  return `Upload failed with status ${status}`
 }
 
 export default function SocialShare() {
@@ -78,20 +111,16 @@ export default function SocialShare() {
         ok: response.ok,
         data: data
       })
-      
       if (!response.ok) {
         // Build a readable error message without assuming data.details is a string.
         // The server's error response has the shape:
         //   { message: string, details?: string, timestamp?: string }
         // but axios error responses can come back as anything, so we coerce safely.
-        const message =
-          (typeof data?.message === "string" && data.message) ||
-          (typeof data?.error?.message === "string" && data.error.message) ||
-          (typeof data?.error === "string" && data.error) ||
-          (typeof data === "string" && data) ||
-          `Upload failed with status ${response.status}`
+        const message = extractErrorMessage(data, response.status)
         const detail =
-          typeof data?.details === "string" ? data.details : undefined
+          typeof (data as { details?: unknown })?.details === "string"
+            ? (data as { details: string }).details
+            : undefined
         const errorMsg = detail ? `${message} - ${detail}` : message
         console.error("❌ Upload failed:", errorMsg)
         throw new Error(errorMsg)
