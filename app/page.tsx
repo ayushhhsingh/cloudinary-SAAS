@@ -106,7 +106,7 @@ export default function Home() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-content">
               <Play className="h-5 w-5 fill-current" />
             </div>
-            <span className="text-xl font-bold">VideoHub</span>
+            <span className="text-xl font-bold">Trimly</span>
           </motion.div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -294,12 +294,12 @@ export default function Home() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-content">
           <Play className="h-4 w-4 fill-current" />
         </div>
-        <span className="font-bold">VideoHub</span>
+        <span className="font-bold">Trimly</span>
       </div>
 
       {/* Copyright & Info */}
       <p className="text-sm text-base-content/50 text-center md:text-left">
-        (c) Ayush Singh 2026 VideoHub. Powered by Cloudinary and AI technology.
+        (c) Ayush Singh 2026 Trimly. Powered by Cloudinary and AI technology.
       </p>
 
       {/* Contact Links */}

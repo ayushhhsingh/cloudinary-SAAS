@@ -60,7 +60,7 @@ export default function AppLayout({
                 <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary text-primary-content">
                   <ImageIcon className="w-4 h-4" />
                 </div>
-                <span className="text-silver-gradient">VideoHub</span>
+                <span className="text-silver-gradient">Trimly</span>
               </button>
             </div>
             <div className="flex-none flex items-center gap-2">
@@ -69,8 +69,8 @@ export default function AppLayout({
                 <>
                   <div className="flex items-center gap-3 rounded-full border border-base-300 bg-base-200/60 py-1 pl-1 pr-3">
                     <div className="avatar placeholder">
-                      <div className="w-9 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content">
-                        <span className="text-base font-semibold">
+                      <div className="flex items-center justify-center w-9 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content">
+                        <span className="text-sm font-semibold leading-none">
                           {user.username?.[0]?.toUpperCase() || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || 'U'}
                         </span>
                       </div>
@@ -117,7 +117,7 @@ export default function AppLayout({
                 <ImageIcon className="w-7 h-7" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-silver-gradient">VideoHub</h2>
+                <h2 className="text-xl font-bold text-silver-gradient">Trimly</h2>
                 <p className="text-xs opacity-60">Cloudinary Powered</p>
               </div>
             </div>
@@ -169,8 +169,8 @@ export default function AppLayout({
               <div className="rounded-lg border border-base-300 bg-base-100 p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="avatar placeholder">
-                    <div className="w-10 rounded-full bg-primary text-primary-content">
-                      <span className="text-sm font-semibold">
+                    <div className="flex items-center justify-center w-10 rounded-full bg-primary text-primary-content">
+                      <span className="text-sm font-semibold leading-none">
                         {user.username?.[0]?.toUpperCase() || user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>

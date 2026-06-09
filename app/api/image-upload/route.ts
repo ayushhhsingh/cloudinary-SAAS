@@ -13,10 +13,40 @@ interface CloudinaryUploadResult {
   [key: string]: unknown
 }
 
-const createErrorResponse = (message: string, status: number, details?: string) => {
+// Coerce any value (string, Error, object) into a readable string.
+// Cloudinary's SDK error objects have a `.message` field; everything else
+// gets a sane JSON-stringify fallback so the client doesn't see "[object Object]".
+const toErrorDetails = (value: unknown): string => {
+  if (value === null || value === undefined) return "Unknown error"
+  if (typeof value === "string") return value
+  if (value instanceof Error) {
+    const base = value.message || value.name || "Error"
+    const cause =
+      (value as { cause?: unknown }).cause !== undefined
+        ? ` (cause: ${toErrorDetails((value as { cause?: unknown }).cause)})`
+        : ""
+    return `${base}${cause}`
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>
+    if (typeof obj.message === "string") {
+      return typeof obj.http_code === "number"
+        ? `${obj.message} (http ${obj.http_code})`
+        : (obj.message as string)
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return "Unserialisable error"
+    }
+  }
+  return String(value)
+}
+
+const createErrorResponse = (message: string, status: number, details?: unknown) => {
   return NextResponse.json({ 
     message, 
-    details,
+    details: details !== undefined ? toErrorDetails(details) : undefined,
     timestamp: new Date().toISOString()
   }, { status })
 }
@@ -32,11 +62,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check Cloudinary credentials
-    console.log("🔍 Checking Cloudinary credentials...")
-    console.log("Cloud Name:", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? "✓ Set" : "✗ Missing")
-    console.log("API Key:", process.env.CLOUDINARY_API_KEY ? "✓ Set" : "✗ Missing")
-    console.log("API Secret:", process.env.CLOUDINARY_API_SECRET ? "✓ Set" : "✗ Missing")
-    
     if (
       !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
       !process.env.CLOUDINARY_API_KEY ||
@@ -47,8 +72,6 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get("file")
-    
-    console.log("📷 Image file received:", file ? "Yes" : "No")
     
     if (!(file instanceof File)) {
       return createErrorResponse("No file provided", 400)
@@ -75,7 +98,12 @@ export async function POST(request: NextRequest) {
     const result = await new Promise<CloudinaryUploadResult>(
       (resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "image-uploads" },
+          {
+            folder: "image-uploads",
+            // 2 minute timeout — handles slow connections without hanging forever.
+            // Cloudinary SDK passes this through to the underlying request.
+            timeout: 120000,
+          },
           (error, uploadResult) => {
             if (error) {
               console.error("❌ Cloudinary image upload error:", error)
@@ -91,6 +119,10 @@ export async function POST(request: NextRequest) {
             resolve(uploadResult as CloudinaryUploadResult)
           }
         )
+        uploadStream.on("error", (err) => {
+          console.error("❌ Image upload stream error:", err)
+          reject(err)
+        })
         uploadStream.end(buffer)
       }
     )
@@ -114,7 +146,7 @@ export async function POST(request: NextRequest) {
     return createErrorResponse(
       "Image upload failed", 
       500, 
-      error instanceof Error ? error.message : String(error)
+      error
     )
   }
 }

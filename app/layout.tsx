@@ -6,7 +6,7 @@ import ThemeScript from "@/components/ThemeScript";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VideoHub - AI-Powered Media Platform",
+  title: "Trimly - AI-Powered Media Platform",
   description:
     "Upload videos, compress them automatically with AI, and resize images for social media with automatic cropping.",
 };
