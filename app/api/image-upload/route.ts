@@ -3,6 +3,7 @@ import { v2 as cloudinary } from "cloudinary"
 import { getAuth } from "@clerk/nextjs/server"
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,

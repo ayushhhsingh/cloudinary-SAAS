@@ -4,11 +4,19 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+// Lazy Prisma client creation. Initialising it at module import time caused
+// "Failed to collect page data" errors on some deployment platforms (Vercel
+// in particular) because the PrismaClient constructor would attempt to reach
+// the database during the build phase, before env vars were fully wired up.
+// With lazy initialisation, the connection is only attempted the first time
+// a route handler actually runs.
+const createPrismaClient = (): PrismaClient => {
+  return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
+};
+
+export const prisma: PrismaClient = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
