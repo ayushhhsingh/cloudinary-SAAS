@@ -10,6 +10,8 @@ import {
   Share2Icon,
   UploadIcon,
   ImageIcon,
+  MenuIcon,
+  XIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -55,7 +57,16 @@ export default function AppLayout({
         {/* Navbar */}
         <header className="w-full border-b border-base-300 bg-base-100">
           <div className="navbar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex-1">
+            <div className="flex-1 flex items-center gap-2">
+              {/* Hamburger menu - visible only on mobile/tablet, hidden on lg+ */}
+              <button
+                onClick={toggleSidebar}
+                className="btn btn-ghost btn-circle hover:bg-base-200 lg:hidden"
+                aria-label="Open menu"
+                title="Open menu"
+              >
+                <MenuIcon className="h-6 w-6" />
+              </button>
               <button onClick={handleLogoClick} className="btn btn-ghost text-xl font-bold hover:bg-base-200 px-2">
                 <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary text-primary-content">
                   <ImageIcon className="w-4 h-4" />
@@ -123,10 +134,11 @@ export default function AppLayout({
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="btn btn-ghost btn-sm lg:hidden"
-              title="Close Sidebar"
+              className="btn btn-ghost btn-sm btn-circle lg:hidden"
+              title="Close menu"
+              aria-label="Close menu"
             >
-              <LogOutIcon className="h-5 w-5" />
+              <XIcon className="h-5 w-5" />
             </button>
           </div>
 
